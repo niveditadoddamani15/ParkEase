@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkEase | Smart Parking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">P</div>
+            <div>
+                <h2>ParkEase<span>2.0</span></h2>
+                <small>SMART MOBILITY</small>
+            </div>
+        </div>
+
+        <div class="side-label">WORKSPACE</div>
+
+        <nav class="side-nav">
+            <a href="/" class="nav-link active">
+                <span>▦</span> Overview
+            </a>
+            <a href="#parking" class="nav-link">
+                <span>▤</span> Parking Spaces
+            </a>
+            <a href="/bookings" class="nav-link">
+                <span>◷</span> Booking History
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="system-card">
+                <span class="online-dot"></span>
+                <div>
+                    <strong>System Online</strong>
+                    <small>All services operational</small>
+                </div>
+            </div>
+            <small class="sidebar-version">PARKEASE © 2026</small>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">PARKING MANAGEMENT / OVERVIEW</p>
+                <h1>Parking Overview</h1>
+                <p class="muted">Monitor your parking facility in real time.</p>
+            </div>
+
+            <div class="topbar-right">
+                <span class="live-status">
+                    <span class="online-dot"></span> Live System
+                </span>
+                <div class="profile-avatar">P</div>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <section class="welcome-panel">
+            <div>
+                <span class="welcome-tag">SMART PARKING SOLUTION</span>
+                <h2>Find your space.<br><span>Own your time.</span></h2>
+                <p>Seamless parking management with intelligent slot allocation.</p>
+                <a href="#parking" class="primary-btn">Explore Parking Spaces <span>→</span></a>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-glow"></div>
+                <div class="hero-ring ring-one"></div>
+                <div class="hero-ring ring-two"></div>
+                <div class="hero-car">
+                    <div class="car-top"></div>
+                    <div class="car-window"></div>
+                    <div class="car-light"></div>
+                </div>
+                <span class="hero-caption">SMART PARKING · MADE SIMPLE</span>
+            </div>
+        </section>
+
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Total Parking Slots</span>
+                    <span class="stat-icon">▦</span>
+                </div>
+                <h2>{{ slots|length }}</h2>
+                <small>Registered parking spaces</small>
+            </div>
+
+            <div class="stat-card available-card">
+                <div class="stat-top">
+                    <span>Available Slots</span>
+                    <span class="stat-icon">✓</span>
+                </div>
+                <h2>{{ slots|selectattr('status', 'equalto', 'Available')|list|length }}</h2>
+                <small>Ready for reservation</small>
+            </div>
+
+            <div class="stat-card occupied-card">
+                <div class="stat-top">
+                    <span>Occupied Slots</span>
+                    <span class="stat-icon">▣</span>
+                </div>
+                <h2>{{ slots|selectattr('status', 'equalto', 'Occupied')|list|length }}</h2>
+                <small>Currently in use</small>
+            </div>
+
+        </section>
+
+        <section class="parking-section" id="parking">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">FACILITY LAYOUT</p>
+                    <h2>Choose Your Parking Space</h2>
+                    <p class="muted">Select any available slot to begin booking.</p>
+                </div>
+
+                <div class="slot-legend">
+                    <span><i class="legend-dot free"></i> Available</span>
+                    <span><i class="legend-dot taken"></i> Occupied</span>
+                    <span><i class="legend-dot chosen"></i> Selected</span>
+                </div>
+            </div>
+
+            <div class="parking-floor">
+                <div class="floor-label">
+                    <span>LEVEL 01</span>
+                    <span>ENTRY ↓</span>
+                </div>
+
+                <div class="parking-grid">
+                    {% for slot in slots %}
+                        <button
+                            type="button"
+                            class="parking-slot {% if slot['status'] == 'Occupied' %}occupied{% else %}available{% endif %}"
+                            {% if slot['status'] == 'Available' %}
+                                onclick="selectSlot('{{ slot['slot_number'] }}', this)"
+                            {% else %}
+                                disabled
+                            {% endif %}
+                        >
+                            <span class="slot-number">{{ slot['slot_number'] }}</span>
+                            <span class="slot-symbol">
+                                {% if slot['status'] == 'Occupied' %}
+                                    ■
+                                {% else %}
+                                    <span class="slot-car"></span>
+                                {% endif %}
+                            </span>
+                            <span class="slot-status">
+                                {% if slot['status'] == 'Occupied' %}
+                                    OCCUPIED
+                                {% else %}
+                                    AVAILABLE
+                                {% endif %}
+                            </span>
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <div class="driveway">
+                    <span>←</span>
+                    <span>DRIVING LANE</span>
+                    <span>→</span>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="booking-section" id="booking-form">
+            <div class="booking-heading">
+                <div>
+                    <p class="eyebrow">RESERVATION PANEL</p>
+                    <h2>Complete Your Booking</h2>
+                    <p class="muted">Enter your details to reserve your selected space.</p>
+                </div>
+                <span class="secure-label">● SECURE BOOKING</span>
+            </div>
+
+            <form action="{{ url_for('book') }}" method="POST" class="booking-form">
+                <div class="form-field">
+                    <label>SELECTED PARKING SLOT</label>
+                    <input type="text" id="selected-slot" name="slot_number"
+                           placeholder="Select a slot above" readonly required>
+                </div>
+
+                <div class="form-field">
+                    <label>CUSTOMER NAME</label>
+                    <input type="text" name="customer_name"
+                           placeholder="Enter your full name" maxlength="100" required>
+                </div>
+
+                <div class="form-field">
+                    <label>VEHICLE NUMBER</label>
+                    <input type="text" name="vehicle_number"
+                           placeholder="e.g. KA09AB1234" maxlength="20" required>
+                </div>
+
+                <button type="submit" class="primary-btn booking-submit" id="booking-submit" disabled>
+                    Confirm Reservation →
+                </button>
+            </form>
+            <p class="form-note">Select an available parking slot before confirming your reservation.</p>
+        </section>
+
+        <footer class="footer">
+            <span>© 2026 ParkEase 2.0</span>
+            <span>Intelligent Parking Management System</span>
+        </footer>
+
+    </main>
+</div>
+
+<script>
+    function selectSlot(slotNumber, button) {
+        document.querySelectorAll('.parking-slot').forEach(slot => {
+            slot.classList.remove('selected');
+        });
+
+        button.classList.add('selected');
+
+        document.getElementById('selected-slot').value = slotNumber;
+        document.getElementById('booking-submit').disabled = false;
+
+        document.getElementById('booking-form').scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+</script>
+
+</body>
+</html>

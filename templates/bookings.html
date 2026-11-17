@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkEase | Booking History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">P</div>
+            <div>
+                <h2>ParkEase<span>2.0</span></h2>
+                <small>SMART MOBILITY</small>
+            </div>
+        </div>
+
+        <div class="side-label">WORKSPACE</div>
+
+        <nav class="side-nav">
+            <a href="/" class="nav-link">
+                <span>▦</span> Overview
+            </a>
+            <a href="/#parking" class="nav-link">
+                <span>▤</span> Parking Spaces
+            </a>
+            <a href="/bookings" class="nav-link active">
+                <span>◷</span> Booking History
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="system-card">
+                <span class="online-dot"></span>
+                <div>
+                    <strong>System Online</strong>
+                    <small>All services operational</small>
+                </div>
+            </div>
+            <small class="sidebar-version">PARKEASE © 2026</small>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">PARKING MANAGEMENT / RECORDS</p>
+                <h1>Booking History</h1>
+                <p class="muted">View and manage all parking reservations.</p>
+            </div>
+
+            <div class="topbar-right">
+                <span class="live-status">
+                    <span class="online-dot"></span> Live System
+                </span>
+                <div class="profile-avatar">P</div>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Total Bookings</span>
+                    <span class="stat-icon">▤</span>
+                </div>
+                <h2>{{ bookings|length }}</h2>
+                <small>All recorded reservations</small>
+            </div>
+
+            <div class="stat-card available-card">
+                <div class="stat-top">
+                    <span>Confirmed</span>
+                    <span class="stat-icon">✓</span>
+                </div>
+                <h2>{{ bookings|selectattr('status', 'equalto', 'Confirmed')|list|length }}</h2>
+                <small>Active reservations</small>
+            </div>
+
+            <div class="stat-card occupied-card">
+                <div class="stat-top">
+                    <span>Cancelled</span>
+                    <span class="stat-icon">×</span>
+                </div>
+                <h2>{{ bookings|selectattr('status', 'equalto', 'Cancelled')|list|length }}</h2>
+                <small>Cancelled reservations</small>
+            </div>
+        </section>
+
+        <section class="booking-section history-section">
+
+            <div class="booking-heading">
+                <div>
+                    <p class="eyebrow">RESERVATION DATABASE</p>
+                    <h2>All Reservations</h2>
+                    <p class="muted">A complete record of parking activity.</p>
+                </div>
+
+                <a href="/" class="primary-btn">+ New Booking</a>
+            </div>
+
+            {% if bookings %}
+
+            <div class="history-table-wrap">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>BOOKING ID</th>
+                            <th>CUSTOMER</th>
+                            <th>VEHICLE NUMBER</th>
+                            <th>PARKING SLOT</th>
+                            <th>BOOKING TIME</th>
+                            <th>STATUS</th>
+                            <th>ACTION</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td class="booking-id">#{{ booking['id'] }}</td>
+                            <td class="customer-cell">{{ booking['customer_name'] }}</td>
+                            <td>{{ booking['vehicle_number'] }}</td>
+                            <td>
+                                <span class="slot-badge">{{ booking['slot_number'] }}</span>
+                            </td>
+                            <td>{{ booking['booking_time'] }}</td>
+                            <td>
+                                {% if booking['status'] == 'Confirmed' %}
+                                    <span class="status-badge confirmed">● Confirmed</span>
+                                {% else %}
+                                    <span class="status-badge cancelled">● Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if booking['status'] == 'Confirmed' %}
+                                    <form
+                                        action="{{ url_for('cancel', booking_id=booking['id']) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Are you sure you want to cancel this booking?');"
+                                    >
+                                        <button type="submit" class="cancel-btn">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="muted">Completed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+                <div class="empty-icon">◷</div>
+                <h3>No bookings available</h3>
+                <p>Your parking reservations will appear here.</p>
+                <a href="/" class="primary-btn">Create Your First Booking →</a>
+            </div>
+
+            {% endif %}
+
+        </section>
+
+        <footer class="footer">
+            <span>© 2026 ParkEase 2.0</span>
+            <span>Intelligent Parking Management System</span>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

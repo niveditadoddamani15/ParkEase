@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+   <title>ParkEase | Admin Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .admin-action-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 180px;
+        }
+
+        .admin-action-form select {
+            padding: 9px;
+            border-radius: 7px;
+            border: 1px solid #39465c;
+            background: #172235;
+            color: white;
+            min-width: 105px;
+        }
+
+        .admin-action-form button {
+            padding: 9px 13px;
+            border: none;
+            border-radius: 7px;
+            background: #7957ff;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .admin-action-form button:hover {
+            background: #987cff;
+        }
+
+        .admin-subtitle {
+            color: #aab5c8;
+            margin-bottom: 22px;
+        }
+
+        .admin-flash {
+            padding: 12px 16px;
+            margin: 12px 0;
+            border-radius: 8px;
+            background: #202d40;
+            color: white;
+        }
+
+        .admin-flash.success {
+            border-left: 4px solid #22c55e;
+        }
+
+        .admin-flash.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .admin-logout {
+            color: #ff8295;
+            text-decoration: none;
+        }
+
+        .booking-tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 22px 0;
+        }
+
+        .booking-tools input,
+        .booking-tools select {
+            padding: 13px 15px;
+            border: 1px solid #39465c;
+            border-radius: 9px;
+            background: #172235;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .booking-tools input {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .booking-tools select {
+            min-width: 170px;
+        }
+
+        .booking-tools input:focus,
+        .booking-tools select:focus {
+            border-color: #987cff;
+        }
+
+        .booking-count {
+            color: #aab5c8;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .no-results {
+            display: none;
+            text-align: center;
+            padding: 22px;
+            color: #aab5c8;
+        }
+
+        .admin-footer {
+            margin-top: 35px;
+            padding: 20px 0;
+            color: #aab5c8;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <h2>ParkEase <span></span></h2>
+            <p>SMART MOBILITY WORKSPACE</p>
+        </div>
+
+        <nav>
+            <a href="#dashboard">▦ Overview</a>
+            <a href="#parking-management">▤ Parking Spaces</a>
+            <a href="#booking-management">◷ Booking History</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <p>System Online</p>
+            <small>All services operational</small>
+            <br><br>
+            <a class="admin-logout"
+               href="{{ url_for('admin_logout') }}">
+                Logout →
+            </a>
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="main-content" id="dashboard">
+
+        <!-- WELCOME SECTION -->
+
+        <section class="welcome-panel">
+
+            <p>PARKEASE  · ADMINISTRATION</p>
+
+            <h1>Admin Dashboard</h1>
+
+            <p>
+                Monitor parking spaces, manage availability
+                and view customer bookings.
+            </p>
+
+        </section>
+
+
+        <!-- FLASH MESSAGES -->
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="admin-flash {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endwith %}
+
+
+        <!-- DASHBOARD STATISTICS -->
+
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <p>Total Parking Slots</p>
+                <h2>{{ total_slots }}</h2>
+                <small>Registered parking spaces</small>
+            </div>
+
+            <div class="stat-card">
+                <p>Available Slots</p>
+                <h2>{{ available_slots }}</h2>
+                <small>Ready for reservation</small>
+            </div>
+
+            <div class="stat-card">
+                <p>Occupied Slots</p>
+                <h2>{{ occupied_slots }}</h2>
+                <small>Currently in use</small>
+            </div>
+
+            <div class="stat-card">
+                <p>Total Bookings</p>
+                <h2>{{ total_bookings }}</h2>
+                <small>All booking records</small>
+            </div>
+
+        </section>
+
+
+        <!-- PARKING SLOT MANAGEMENT -->
+
+        <section class="admin-panel" id="parking-management">
+
+            <h2>Parking Slot Management</h2>
+
+            <p class="admin-subtitle">
+                View parking spaces and manually update their availability.
+            </p>
+
+            <div class="admin-table-wrap">
+
+                <table class="admin-table">
+
+                    <thead>
+                        <tr>
+                            <th>PARKING SLOT</th>
+                            <th>CURRENT STATUS</th>
+                            <th>MANAGE STATUS</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for slot in all_slots %}
+
+                        <tr>
+
+                            <td>{{ slot['slot_number'] }}</td>
+
+                            <td>
+                                <span class="admin-status {{ slot['status']|lower }}">
+                                    {{ slot['status'] }}
+                                </span>
+                            </td>
+
+                            <td>
+
+                                <form class="admin-action-form"
+                                      method="POST"
+                                      action="{{ url_for('update_slot_status', slot_id=slot['id']) }}">
+
+                                    <select name="status">
+
+                                        <option value="Available"
+                                            {% if slot['status'] == 'Available' %}selected{% endif %}>
+                                            Available
+                                        </option>
+
+                                        <option value="Occupied"
+                                            {% if slot['status'] == 'Occupied' %}selected{% endif %}>
+                                            Occupied
+                                        </option>
+
+                                    </select>
+
+                                    <button type="submit">
+                                        Update
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="3">No parking slots found.</td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- CUSTOMER BOOKING MANAGEMENT -->
+
+        <section class="admin-panel" id="booking-management">
+
+            <h2>Customer Booking Records</h2>
+
+            <p class="admin-subtitle">
+                Search, filter and monitor all customer bookings.
+            </p>
+
+
+            <!-- SEARCH AND FILTER -->
+
+            <div class="booking-tools">
+
+                <input
+                    type="text"
+                    id="bookingSearch"
+                    placeholder="Search customer name or vehicle number..."
+                >
+
+                <select id="bookingFilter">
+                    <option value="all">All Bookings</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+
+            </div>
+
+            <p class="booking-count" id="bookingCount">
+                Showing all bookings
+            </p>
+
+
+            <!-- BOOKING TABLE -->
+
+            <div class="admin-table-wrap">
+
+                <table class="admin-table">
+
+                    <thead>
+                        <tr>
+                            <th>BOOKING ID</th>
+                            <th>CUSTOMER</th>
+                            <th>VEHICLE NUMBER</th>
+                            <th>PARKING SLOT</th>
+                            <th>BOOKING TIME</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="bookingTableBody">
+
+                        {% for booking in all_bookings %}
+
+                        <tr class="booking-row"
+                            data-status="{{ booking['status']|lower }}">
+
+                            <td>#{{ booking['id'] }}</td>
+
+                            <td>{{ booking['customer_name'] }}</td>
+
+                            <td>{{ booking['vehicle_number'] }}</td>
+
+                            <td>{{ booking['slot_number'] }}</td>
+
+                            <td>{{ booking['booking_time'] }}</td>
+
+                            <td>
+                                <span class="admin-status {{ booking['status']|lower }}">
+                                    {{ booking['status'] }}
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr id="emptyBookingRow">
+                            <td colspan="6">
+                                No booking records available.
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+                <div class="no-results" id="noResults">
+                    No matching bookings found.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
+
+        <footer class="admin-footer">
+            <p>
+                © 2026 ParkEase  |
+                Intelligent Parking Management System
+            </p>
+        </footer>
+
+    </main>
+
+</div>
+
+
+<!-- BOOKING SEARCH AND FILTER SCRIPT -->
+
+<script>
+
+    const searchInput = document.getElementById("bookingSearch");
+    const filterSelect = document.getElementById("bookingFilter");
+    const bookingRows = document.querySelectorAll(".booking-row");
+    const bookingCount = document.getElementById("bookingCount");
+    const noResults = document.getElementById("noResults");
+    const emptyBookingRow = document.getElementById("emptyBookingRow");
+
+    function filterBookings() {
+
+        const searchText = searchInput.value.toLowerCase().trim();
+        const selectedStatus = filterSelect.value;
+
+        let visibleCount = 0;
+
+        bookingRows.forEach(function(row) {
+
+            const customer = row.cells[1].textContent.toLowerCase();
+            const vehicle = row.cells[2].textContent.toLowerCase();
+            const status = row.dataset.status;
+
+            const matchesSearch =
+                customer.includes(searchText) ||
+                vehicle.includes(searchText);
+
+            const matchesStatus =
+                selectedStatus === "all" ||
+                status === selectedStatus;
+
+            if (matchesSearch && matchesStatus) {
+
+                row.style.display = "";
+                visibleCount++;
+
+            } else {
+
+                row.style.display = "none";
+
+            }
+
+        });
+
+        bookingCount.textContent =
+            "Showing " + visibleCount + " of " +
+            bookingRows.length + " bookings";
+
+        noResults.style.display =
+            visibleCount === 0 && bookingRows.length > 0
+                ? "block"
+                : "none";
+
+        if (emptyBookingRow) {
+            emptyBookingRow.style.display = "none";
+        }
+    }
+
+    searchInput.addEventListener("input", filterBookings);
+    filterSelect.addEventListener("change", filterBookings);
+
+    filterBookings();
+
+</script>
+
+</body>
+</html>
