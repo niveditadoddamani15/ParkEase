@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-   <title>ParkEase | Admin Dashboard</title>
+    <title>ParkEase 2.0 | Admin Dashboard</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
@@ -117,6 +117,80 @@
             color: #aab5c8;
             text-align: center;
         }
+
+        /* RECENT ACTIVITY */
+        <a href="{{ url_for('admin_qr_scanner') }}">▣ QR Code Scanner</a>
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .activity-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 18px;
+            background: #172235;
+            border: 1px solid #303d55;
+            border-radius: 12px;
+            transition: 0.3s ease;
+        }
+
+        .activity-card:hover {
+            border-color: #987cff;
+            transform: translateY(-2px);
+        }
+
+        .activity-icon {
+            min-width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #332653;
+            font-size: 20px;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-details h3 {
+            font-size: 15px;
+            color: #f0eaff;
+            margin-bottom: 6px;
+        }
+
+        .activity-details p {
+            font-size: 13px;
+            color: #b5bfd0;
+            margin-bottom: 7px;
+        }
+
+        .activity-details small {
+            font-size: 12px;
+            color: #8795aa;
+        }
+
+        .activity-empty {
+            text-align: center;
+            padding: 25px;
+            color: #aab5c8;
+            background: #172235;
+            border-radius: 10px;
+        }
+
+        .activity-customer {
+            color: #d8b4fe;
+        }
+
+        @media (max-width: 600px) {
+            .activity-card {
+                padding: 13px;
+            }
+        }
     </style>
 </head>
 
@@ -134,11 +208,12 @@
         </div>
 
         <nav>
-            <a href="#dashboard">▦ Overview</a>
-            <a href="#parking-management">▤ Parking Spaces</a>
-            <a href="#booking-management">◷ Booking History</a>
-        </nav>
-
+    <a href="#dashboard">▦ Overview</a>
+    <a href="#parking-management">▤ Parking Spaces</a>
+    <a href="#booking-management">◷ Booking History</a>
+    <a href="#recent-activity">◉ Recent Activity</a>
+    <a href="{{ url_for('admin_qr_scanner') }}">▣ QR Code Scanner</a>
+</nav>
         <div class="sidebar-footer">
             <p>System Online</p>
             <small>All services operational</small>
@@ -160,7 +235,7 @@
 
         <section class="welcome-panel">
 
-            <p>PARKEASE  · ADMINISTRATION</p>
+            <p>PARKEASE · ADMINISTRATION</p>
 
             <h1>Admin Dashboard</h1>
 
@@ -307,9 +382,6 @@
                 Search, filter and monitor all customer bookings.
             </p>
 
-
-            <!-- SEARCH AND FILTER -->
-
             <div class="booking-tools">
 
                 <input
@@ -329,9 +401,6 @@
             <p class="booking-count" id="bookingCount">
                 Showing all bookings
             </p>
-
-
-            <!-- BOOKING TABLE -->
 
             <div class="admin-table-wrap">
 
@@ -396,11 +465,77 @@
         </section>
 
 
+        <!-- ADMIN RECENT ACTIVITY -->
+
+        <section class="admin-panel" id="recent-activity">
+
+            <h2>Recent Activity</h2>
+
+            <p class="admin-subtitle">
+                Monitor the latest customer booking and cancellation activities.
+            </p>
+
+            {% if recent_activities %}
+
+                <div class="activity-list">
+
+                    {% for activity in recent_activities %}
+
+                    <div class="activity-card">
+
+                        <div class="activity-icon">
+                            {% if activity['activity_type'] == 'booking' %}
+                                🅿️
+                            {% elif activity['activity_type'] == 'cancellation' %}
+                                ❌
+                            {% else %}
+                                📋
+                            {% endif %}
+                        </div>
+
+                        <div class="activity-details">
+
+                            <h3>
+                                {{ activity['activity_type']|replace('_', ' ')|title }}
+                            </h3>
+
+                            <p>
+                                {{ activity['description'] }}
+                            </p>
+
+                            <p class="activity-customer">
+                                Customer:
+                                {{ activity['customer_name'] or 'Unknown customer' }}
+                            </p>
+
+                            <small>
+                                {{ activity['created_at'] }}
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="activity-empty">
+                    No recent customer activity available yet.
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
         <!-- FOOTER -->
 
         <footer class="admin-footer">
             <p>
-                © 2026 ParkEase  |
+                © 2026 ParkEase |
                 Intelligent Parking Management System
             </p>
         </footer>
@@ -443,14 +578,10 @@
                 status === selectedStatus;
 
             if (matchesSearch && matchesStatus) {
-
                 row.style.display = "";
                 visibleCount++;
-
             } else {
-
                 row.style.display = "none";
-
             }
 
         });

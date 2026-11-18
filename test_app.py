@@ -7,11 +7,9 @@ from app import app
 def client(tmp_path, monkeypatch):
     test_database = tmp_path / "test_parking.db"
 
-    monkeypatch.setattr(
-        database,
-        "DATABASE",
-        str(test_database)
-    )
+    # Force automated tests to use temporary SQLite
+    monkeypatch.setattr(database, "DATABASE", str(test_database))
+    monkeypatch.setattr(database, "USE_SUPABASE", False)
 
     database.initialize_database()
 
@@ -41,11 +39,13 @@ def test_admin_requires_login(client):
 
 
 def test_successful_booking(client):
-    client.post("/book", data={
+    response = client.post("/book", data={
         "slot_number": "P01",
         "customer_name": "Test Customer",
         "vehicle_number": "KA01AB1234"
     })
+
+    assert response.status_code == 302
 
     connection = database.get_connection()
 
@@ -106,6 +106,8 @@ def test_booking_cancellation(client):
     ).fetchone()
 
     connection.close()
+
+    assert booking is not None
 
     response = client.post(f"/cancel/{booking['id']}")
     assert response.status_code == 302

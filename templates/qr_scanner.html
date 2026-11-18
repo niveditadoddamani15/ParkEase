@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkEase | QR Scanner</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .scanner-container {
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 25px;
+            background: #1e293b;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #a78bfa;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 450px;
+            margin: 20px auto;
+            color: #111827;
+        }
+
+        input {
+            width: 90%;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 7px;
+            border: none;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin: 8px;
+            border: none;
+            border-radius: 7px;
+            background: #8b5cf6;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #7c3aed;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 10px;
+            background: #334155;
+            text-align: left;
+            display: none;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #c4b5fd;
+            text-decoration: none;
+        }
+
+        .approve {
+            background: #16a34a;
+        }
+
+        .approve:hover {
+            background: #15803d;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="scanner-container">
+
+    <h1>ParkEase QR Scanner</h1>
+
+    <p>Scan the customer's confirmed booking QR code.</p>
+
+    <div id="reader"></div>
+
+    <button id="startButton" onclick="startScanner()">
+        Start Camera
+    </button>
+
+    <button id="stopButton" onclick="stopScanner()" disabled>
+        Stop Camera
+    </button>
+
+    <hr>
+
+    <h3>Or Enter QR Token Manually</h3>
+
+    <input
+        type="text"
+        id="manualToken"
+        placeholder="Enter QR token"
+    >
+
+    <button onclick="verifyManualToken()">
+        Verify Booking
+    </button>
+
+    <p id="message"></p>
+
+    <div id="result">
+
+        <h3>Booking Details</h3>
+
+        <p><strong>Booking ID:</strong> <span id="bookingId"></span></p>
+        <p><strong>Customer:</strong> <span id="customerName"></span></p>
+        <p><strong>Vehicle Number:</strong> <span id="vehicleNumber"></span></p>
+        <p><strong>Parking Slot:</strong> <span id="slotNumber"></span></p>
+        <p><strong>Booking Time:</strong> <span id="bookingTime"></span></p>
+        <p><strong>Status:</strong> <span id="bookingStatus"></span></p>
+
+        <button
+            id="approveButton"
+            class="approve"
+            onclick="approveEntry()"
+        >
+            Approve Entry
+        </button>
+
+    </div>
+
+    <a href="{{ url_for('admin_dashboard') }}" class="back-link">
+        ← Back to Admin Dashboard
+    </a>
+
+</div>
+
+<script>
+
+let html5QrCode = null;
+let scannerRunning = false;
+let currentBookingId = null;
+let processingScan = false;
+
+
+function showMessage(message, success = false) {
+    const element = document.getElementById("message");
+    element.textContent = message;
+    element.style.color = success ? "#4ade80" : "#f87171";
+}
+
+
+function hideResult() {
+    document.getElementById("result").style.display = "none";
+    currentBookingId = null;
+}
+
+
+function extractToken(value) {
+    try {
+        const url = new URL(value);
+        return url.searchParams.get("token") || value;
+    } catch {
+        return value;
+    }
+}
+
+
+async function verifyToken(token) {
+
+    token = token.trim();
+
+    if (!token) {
+        showMessage("Please enter or scan a QR token.");
+        return;
+    }
+
+    hideResult();
+    showMessage("Verifying booking...");
+
+    try {
+
+        const response = await fetch(
+            "{{ url_for('api_verify_qr') }}",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ token: token })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            showMessage(data.message || "Booking verification failed.");
+            return;
+        }
+
+        const booking = data.booking;
+
+        currentBookingId = booking.id;
+
+        document.getElementById("bookingId").textContent = booking.id;
+        document.getElementById("customerName").textContent = booking.customer_name;
+        document.getElementById("vehicleNumber").textContent = booking.vehicle_number;
+        document.getElementById("slotNumber").textContent = booking.slot_number;
+        document.getElementById("bookingTime").textContent = booking.booking_time;
+        document.getElementById("bookingStatus").textContent = booking.status;
+
+        document.getElementById("result").style.display = "block";
+
+        showMessage("Valid booking! Check the details before approving entry.", true);
+
+    } catch (error) {
+        showMessage("Unable to contact the server. Please try again.");
+    }
+}
+
+
+async function startScanner() {
+
+    if (scannerRunning) return;
+
+    try {
+
+        html5QrCode = new Html5Qrcode("reader");
+
+        await html5QrCode.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+
+            async (decodedText) => {
+
+                if (processingScan) return;
+
+                processingScan = true;
+
+                const token = extractToken(decodedText);
+
+                await stopScanner();
+                await verifyToken(token);
+
+                processingScan = false;
+
+            },
+
+            () => {}
+        );
+
+        scannerRunning = true;
+
+        document.getElementById("startButton").disabled = true;
+        document.getElementById("stopButton").disabled = false;
+
+        showMessage("Camera started. Point it at the booking QR code.", true);
+
+    } catch (error) {
+
+        scannerRunning = false;
+
+        showMessage(
+            "Camera could not start. Allow camera permission or use manual token entry."
+        );
+
+    }
+}
+
+
+async function stopScanner() {
+
+    if (html5QrCode && scannerRunning) {
+
+        try {
+            await html5QrCode.stop();
+            await html5QrCode.clear();
+        } catch (error) {
+            console.log("Scanner stopped.");
+        }
+
+    }
+
+    scannerRunning = false;
+
+    document.getElementById("startButton").disabled = false;
+    document.getElementById("stopButton").disabled = true;
+}
+
+
+function verifyManualToken() {
+
+    const token = document.getElementById("manualToken").value;
+
+    verifyToken(token);
+}
+
+
+async function approveEntry() {
+
+    if (!currentBookingId) {
+        showMessage("Please verify a booking first.");
+        return;
+    }
+
+    const approveButton = document.getElementById("approveButton");
+
+    approveButton.disabled = true;
+
+    try {
+
+        const response = await fetch(
+            `/admin/api/check-in/${currentBookingId}`,
+            {
+                method: "POST"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            showMessage(data.message || "Entry approval failed.");
+            approveButton.disabled = false;
+            return;
+        }
+
+        showMessage(data.message, true);
+
+        approveButton.textContent = "Entry Approved";
+        currentBookingId = null;
+
+    } catch (error) {
+
+        showMessage("Unable to approve entry. Please try again.");
+        approveButton.disabled = false;
+
+    }
+}
+
+
+</script>
+
+</body>
+</html>

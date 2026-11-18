@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkEase | Booking QR Code</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .qr-page {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 15px;
+            background: #080d18;
+            color: #ffffff;
+        }
+
+        .qr-card {
+            width: 100%;
+            max-width: 480px;
+            padding: 35px;
+            text-align: center;
+            background: #111827;
+            border: 1px solid #8b5cf6;
+            border-radius: 18px;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+        }
+
+        .qr-card h1 {
+            color: #c4b5fd;
+            margin-bottom: 10px;
+        }
+
+        .qr-card p {
+            color: #a5b4fc;
+            margin-bottom: 22px;
+        }
+
+        .qr-image {
+            width: 230px;
+            height: 230px;
+            padding: 12px;
+            background: #ffffff;
+            border-radius: 12px;
+            margin: 10px auto 25px;
+        }
+
+        .qr-image img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .booking-details {
+            text-align: left;
+            background: #1e293b;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .booking-details p {
+            color: #ffffff;
+            margin: 10px 0;
+        }
+
+        .back-btn {
+            display: inline-block;
+            text-decoration: none;
+            padding: 12px 22px;
+            border-radius: 9px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #8b5cf6, #d946ef);
+            font-weight: 600;
+        }
+
+        .qr-note {
+            font-size: 13px;
+            margin-top: 18px;
+            color: #cbd5e1 !important;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="qr-page">
+
+    <div class="qr-card">
+
+        <h1>ParkEase</h1>
+
+        <p>Your Parking Reservation QR Code</p>
+
+        <div class="qr-image">
+            <img
+                src="data:image/png;base64,{{ qr_image }}"
+                alt="Booking QR Code"
+            >
+        </div>
+
+        <div class="booking-details">
+
+            <p><strong>Booking ID:</strong> #{{ booking['id'] }}</p>
+
+            <p><strong>Customer:</strong> {{ booking['customer_name'] }}</p>
+
+            <p><strong>Vehicle:</strong> {{ booking['vehicle_number'] }}</p>
+
+            <p><strong>Parking Slot:</strong> {{ booking['slot_number'] }}</p>
+
+            <p><strong>Status:</strong> {{ booking['status'] }}</p>
+
+        </div>
+
+        <p class="qr-note">
+            Present this QR code to the parking administrator
+            for reservation verification.
+        </p>
+
+        <a href="{{ url_for('customer_dashboard') }}" class="back-btn">
+            Back to Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -2,3 +2,6 @@ Flask==3.1.3
 Werkzeug==3.1.9
 python-dotenv
 pytest
+gunicorn==23.0.0
+psycopg[binary]
+qrcode[pil]

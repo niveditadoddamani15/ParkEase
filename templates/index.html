@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ParkEase | Smart Parking</title>
+    <title>ParkEase 2.0 | Smart Parking</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -58,6 +58,25 @@
                 <span class="live-status">
                     <span class="online-dot"></span> Live System
                 </span>
+
+                {% if session.get('customer_id') %}
+                    <span class="account-name">
+                        Hi, {{ session.get('customer_name') }}
+                    </span>
+                    <a href="{{ url_for('customer_logout') }}"
+                       class="account-btn logout-btn">
+                        Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="account-btn">
+                        Login
+                    </a>
+                    <a href="{{ url_for('register') }}"
+                       class="account-btn register-btn">
+                        Create Account
+                    </a>
+                {% endif %}
+
                 <div class="profile-avatar">P</div>
             </div>
         </header>
@@ -73,8 +92,11 @@
                 <span class="welcome-tag">SMART PARKING SOLUTION</span>
                 <h2>Find your space.<br><span>Own your time.</span></h2>
                 <p>Seamless parking management with intelligent slot allocation.</p>
-                <a href="#parking" class="primary-btn">Explore Parking Spaces <span>→</span></a>
+                <a href="#parking" class="primary-btn">
+                    Explore Parking Spaces <span>→</span>
+                </a>
             </div>
+
             <div class="hero-visual">
                 <div class="hero-glow"></div>
                 <div class="hero-ring ring-one"></div>
@@ -191,6 +213,7 @@
             </div>
 
             <form action="{{ url_for('book') }}" method="POST" class="booking-form">
+
                 <div class="form-field">
                     <label>SELECTED PARKING SLOT</label>
                     <input type="text" id="selected-slot" name="slot_number"
@@ -209,15 +232,19 @@
                            placeholder="e.g. KA09AB1234" maxlength="20" required>
                 </div>
 
-                <button type="submit" class="primary-btn booking-submit" id="booking-submit" disabled>
+                <button type="submit" class="primary-btn booking-submit"
+                        id="booking-submit" disabled>
                     Confirm Reservation →
                 </button>
             </form>
-            <p class="form-note">Select an available parking slot before confirming your reservation.</p>
+
+            <p class="form-note">
+                Select an available parking slot before confirming your reservation.
+            </p>
         </section>
 
         <footer class="footer">
-            <span>© 2026 ParkEase 2.0</span>
+            <span>© 2026 ParkEase</span>
             <span>Intelligent Parking Management System</span>
         </footer>
 

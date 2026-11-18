@@ -690,3 +690,35 @@ a {
         padding: 10px;
     }
 }
+/* CUSTOMER ACCOUNT LINKS */
+
+.account-btn {
+    text-decoration: none;
+    padding: 10px 17px;
+    border-radius: 9px;
+    color: #ffffff;
+    border: 1px solid #8b5cf6;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.3s ease;
+    white-space: nowrap;
+}
+
+.account-btn:hover {
+    background: #8b5cf6;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.35);
+}
+
+.register-btn {
+    background: linear-gradient(135deg, #8b5cf6, #d946ef);
+    border: none;
+}
+
+.logout-btn {
+    border-color: #ec4899;
+}
+
+.account-name {
+    color: #e9d5ff;
+    font-size: 13px;
+}

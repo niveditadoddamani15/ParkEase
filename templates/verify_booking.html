@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkEase | Verify Booking</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .verify-page {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px 15px;
+            background: #080d18;
+            color: #ffffff;
+        }
+
+        .verify-card {
+            width: 100%;
+            max-width: 550px;
+            padding: 35px;
+            background: #111827;
+            border: 1px solid #8b5cf6;
+            border-radius: 18px;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+        }
+
+        .verify-card h1 {
+            text-align: center;
+            color: #c4b5fd;
+            margin-bottom: 12px;
+        }
+
+        .verify-description {
+            text-align: center;
+            color: #a5b4fc;
+            margin-bottom: 28px;
+        }
+
+        .verify-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .verify-form label {
+            color: #e9d5ff;
+            font-weight: 600;
+        }
+
+        .verify-form input {
+            padding: 13px;
+            border-radius: 9px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #ffffff;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .verify-form button {
+            padding: 13px;
+            border: none;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #8b5cf6, #d946ef);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .valid {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid #22c55e;
+            color: #86efac;
+        }
+
+        .invalid {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
+
+        .booking-details {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 12px;
+            background: #1e293b;
+        }
+
+        .booking-details p {
+            margin: 10px 0;
+            color: #e2e8f0;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 22px;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 9px;
+            background: #334155;
+            color: #ffffff;
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="verify-page">
+
+    <div class="verify-card">
+
+        <h1>ParkEase Admin</h1>
+
+        <p class="verify-description">
+            Parking Reservation Verification
+        </p>
+
+        <form method="POST" action="{{ url_for('admin_verify') }}"
+              class="verify-form">
+
+            <label for="token">QR Verification Token</label>
+
+            <input
+                type="text"
+                id="token"
+                name="token"
+                value="{{ request.args.get('token', '') }}"
+                placeholder="Scan QR code or enter token"
+                required
+            >
+
+            <button type="submit">
+                Verify Booking
+            </button>
+
+        </form>
+
+        {% if verification_message %}
+
+            <div class="result {{ 'valid' if is_valid else 'invalid' }}">
+
+                <h3>{{ '✓ Booking Verified' if is_valid else '✕ Verification Failed' }}</h3>
+
+                <p>{{ verification_message }}</p>
+
+            </div>
+
+        {% endif %}
+
+        {% if is_valid and booking %}
+
+            <div class="booking-details">
+
+                <h3>Booking Information</h3>
+
+                <p><strong>Booking ID:</strong> #{{ booking['id'] }}</p>
+
+                <p><strong>Customer:</strong> {{ booking['customer_name'] }}</p>
+
+                <p><strong>Vehicle:</strong> {{ booking['vehicle_number'] }}</p>
+
+                <p><strong>Parking Slot:</strong> {{ booking['slot_number'] }}</p>
+
+                <p><strong>Booking Time:</strong> {{ booking['booking_time'] }}</p>
+
+                <p><strong>Status:</strong> {{ booking['status'] }}</p>
+
+            </div>
+
+        {% endif %}
+
+        <div class="center">
+
+            <a href="{{ url_for('admin_dashboard') }}" class="back-btn">
+                Back to Admin Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
